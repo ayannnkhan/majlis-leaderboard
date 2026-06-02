@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Majlis Al Tazkiyah — Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #b8952a;
+    --gold-light: #e8c96a;
+    --gold-pale: #fdf6e3;
+    --ink: #1a1410;
+    --ink-mid: #4a3f35;
+    --ink-soft: #8a7a6a;
+    --border: #e0d0b0;
+    --bg: #fafaf7;
+    --white: #ffffff;
+    --green: #2d6a4f;
+    --red: #9b2335;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .header-ornament {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; margin-bottom: 10px;
+  }
+  .header-ornament span {
+    display: block; height: 1px; width: 80px;
+    background: linear-gradient(to right, transparent, var(--gold));
+  }
+  .header-ornament span:last-child {
+    background: linear-gradient(to left, transparent, var(--gold));
+  }
+  .header-ornament svg { color: var(--gold); }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .header h1 em {
+    font-style: normal;
+    color: var(--gold);
+  }
+  .header p {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .divider {
+    width: 60px; height: 2px;
+    background: linear-gradient(to right, var(--gold-light), var(--gold));
+    margin: 14px auto 0;
+    border-radius: 2px;
+  }
+
+  /* ── LEADERBOARD ── */
+  .board {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .entry {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .entry:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+  .entry.rank-1 { border-color: #d4a017; background: linear-gradient(135deg, #fffdf5 0%, #fef9e7 100%); }
+  .entry.rank-2 { border-color: #adb5bd; background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%); }
+  .entry.rank-3 { border-color: #c07a40; background: linear-gradient(135deg, #fff8f3 0%, #fdf0e6 100%); }
+
+  .rank-badge {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; font-weight: 700;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--gold-pale); color: var(--gold);
+    border: 1.5px solid var(--border);
+  }
+  .rank-1 .rank-badge { background: #fef3c7; color: #92640a; border-color: #d4a017; font-size: 1.1rem; }
+  .rank-2 .rank-badge { background: #f1f3f5; color: #6c757d; border-color: #adb5bd; }
+  .rank-3 .rank-badge { background: #fde8d8; color: #8b4513; border-color: #c07a40; }
+
+  .name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .points-block {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Playfair Display', serif;
+  }
+  .points {
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--ink);
+    min-width: 42px; text-align: right;
+    transition: transform 0.2s;
+  }
+  .pts-label { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; color: var(--ink-soft); font-weight: 400; margin-left: -6px; }
+
+  .btn-pts {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: none; cursor: pointer;
+    font-size: 1rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+    line-height: 1;
+  }
+  .btn-up { background: #e8f5e9; color: var(--green); }
+  .btn-up:hover { background: #c8e6c9; transform: scale(1.12); }
+  .btn-down { background: #fce4e4; color: var(--red); }
+  .btn-down:hover { background: #f8c8c8; transform: scale(1.12); }
+  .btn-pts.hidden, .btn-del.hidden { display: none; }
+
+  .btn-del {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: none; cursor: pointer; background: #fce4e4; color: var(--red);
+    font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s; margin-left: 4px;
+  }
+  .btn-del:hover { background: #f8c8c8; transform: scale(1.12); }
+
+  /* ── TROPHY ICONS ── */
+  .trophy { font-size: 1.05rem; }
+
+  /* ── ADMIN PANEL ── */
+  .admin-bar {
+    max-width: 640px; margin: 32px auto 0;
+    display: flex; justify-content: center;
+  }
+  .btn-admin {
+    border: 1.5px solid var(--border); background: var(--white);
+    padding: 9px 24px; border-radius: 30px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    font-weight: 500; color: var(--ink-mid);
+    cursor: pointer; letter-spacing: 0.05em;
+    transition: border-color 0.2s, color 0.2s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .btn-admin:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── MODAL ── */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(20,15,10,0.45); backdrop-filter: blur(4px);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    background: var(--white); border-radius: 18px;
+    padding: 32px 28px; width: 90%; max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    animation: popIn 0.25s cubic-bezier(.22,.68,0,1.3) both;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.9) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; margin-bottom: 6px; color: var(--ink);
+  }
+  .modal p { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .modal input[type="password"], .modal input[type="text"] {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    color: var(--ink); outline: none; transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+  .modal input:focus { border-color: var(--gold); }
+  .modal-btns { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-confirm {
+    flex: 1; padding: 10px; border: none; border-radius: 8px;
+    background: var(--gold); color: var(--white); font-weight: 600;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9rem;
+    transition: background 0.15s;
+  }
+  .btn-confirm:hover { background: #a07820; }
+  .btn-cancel {
+    flex: 1; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px;
+    background: transparent; color: var(--ink-mid); font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9rem;
+    transition: border-color 0.15s;
+  }
+  .btn-cancel:hover { border-color: var(--ink-mid); }
+  .error-msg { color: var(--red); font-size: 0.8rem; margin-top: -6px; margin-bottom: 8px; display: none; }
+
+  /* ── ADD NAME SECTION (admin only) ── */
+  .add-section {
+    max-width: 640px; margin: 16px auto 0;
+    display: none; gap: 10px;
+  }
+  .add-section.visible { display: flex; }
+  .add-section input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    color: var(--ink); outline: none; transition: border-color 0.2s;
+    background: var(--white);
+  }
+  .add-section input:focus { border-color: var(--gold); }
+  .btn-add {
+    padding: 10px 20px; border: none; border-radius: 8px;
+    background: var(--gold); color: var(--white); font-weight: 600;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.88rem;
+    white-space: nowrap; transition: background 0.15s;
+  }
+  .btn-add:hover { background: #a07820; }
+
+  .admin-badge {
+    max-width: 640px; margin: 10px auto 0;
+    text-align: center; font-size: 0.75rem;
+    color: var(--green); font-weight: 500;
+    display: none;
+  }
+  .admin-badge.visible { display: block; }
+
+  /* ── POINTS BUMP ANIMATION ── */
+  @keyframes bumpUp { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+  @keyframes bumpDown { 0%{transform:scale(1)} 40%{transform:scale(0.75)} 100%{transform:scale(1)} }
+  .bump-up { animation: bumpUp 0.25s ease; }
+  .bump-down { animation: bumpDown 0.25s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-ornament">
+    <span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+    <span></span>
+  </div>
+  <h1>Majlis Al <em>Tazkiyah</em></h1>
+  <p>Leaderboard</p>
+  <div class="divider"></div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="board" id="board"></div>
+
+<!-- ADD NAME (admin) -->
+<div class="add-section" id="addSection">
+  <input type="text" id="newNameInput" placeholder="Enter new member name…" maxlength="40">
+  <button class="btn-add" onclick="addName()">+ Add</button>
+</div>
+
+<div class="admin-badge" id="adminBadge">🔓 Admin mode active — editing enabled</div>
+
+<!-- ADMIN UNLOCK BUTTON -->
+<div class="admin-bar">
+  <button class="btn-admin" onclick="openModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Admin Panel
+  </button>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Admin Access</h2>
+    <p>Enter the password to enable editing</p>
+    <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+    <div class="error-msg" id="pwError">Incorrect password. Try again.</div>
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="checkPw()">Unlock</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PASSWORD = "tazkiyahalnafs"; // ← Change this password as you like
+
+  let isAdmin = false;
+	
+  let members = [
+    { name: "Arsalan",   points: 23 },
+    { name: "Adnan",   points: 22 },
+    { name: "Umer",    points: 22 },
+    { name: "Asad",    points: 22 },
+    { name: "Zadida",    points: 21 },
+    { name: "Daniyal",    points: 21 },
+    { name: "Mahir",    points: 21 },
+    { name: "Musa",       points: 14  },
+    { name: "Saba",     points: 0  },
+    { name: "Hashir",     points: 0  },
+  ];
+
+  function sorted() {
+    return [...members].sort((a, b) => b.points - a.points);
+  }
+
+  function rankMedal(rank) {
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    return rank;
+  }
+
+  function rankClass(rank) {
+    if (rank === 1) return "rank-1";
+    if (rank === 2) return "rank-2";
+    if (rank === 3) return "rank-3";
+    return "";
+  }
+
+  function render() {
+    const board = document.getElementById("board");
+    const list = sorted();
+    board.innerHTML = "";
+
+    list.forEach((m, i) => {
+      const rank = i + 1;
+      const div = document.createElement("div");
+      div.className = `entry ${rankClass(rank)}`;
+      div.id = `entry-${i}`;
+
+      div.innerHTML = `
+        <div class="rank-badge">${rankMedal(rank)}</div>
+        <div class="name">${escHtml(m.name)}</div>
+        <div class="points-block">
+          <button class="btn-pts btn-down ${isAdmin ? '' : 'hidden'}" onclick="changePoints('${escHtml(m.name)}', -1, this)">−</button>
+          <span class="points" id="pts-${i}">${m.points}</span><span class="pts-label">pts</span>
+          <button class="btn-pts btn-up ${isAdmin ? '' : 'hidden'}" onclick="changePoints('${escHtml(m.name)}', 1, this)">+</button>
+          <button class="btn-del ${isAdmin ? '' : 'hidden'}" onclick="deleteMember('${escHtml(m.name)}')" title="Remove">✕</button>
+        </div>
+      `;
+      board.appendChild(div);
+    });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function changePoints(name, delta, btn) {
+    const m = members.find(x => x.name === name);
+    if (!m) return;
+    m.points = Math.max(0, m.points + delta);
+    render();
+  }
+
+  function deleteMember(name) {
+    if (!confirm(`Remove "${name}" from the leaderboard?`)) return;
+    members = members.filter(x => x.name !== name);
+    render();
+  }
+
+  function addName() {
+    const input = document.getElementById("newNameInput");
+    const name = input.value.trim();
+    if (!name) return;
+    if (members.find(m => m.name.toLowerCase() === name.toLowerCase())) {
+      alert("That name already exists.");
+      return;
+    }
+    members.push({ name, points: 0 });
+    input.value = "";
+    render();
+  }
+
+  // ── MODAL ──
+  function openModal() {
+    if (isAdmin) { lockAdmin(); return; }
+    document.getElementById("modalBg").classList.add("open");
+    document.getElementById("pwInput").value = "";
+    document.getElementById("pwError").style.display = "none";
+    setTimeout(() => document.getElementById("pwInput").focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById("modalBg").classList.remove("open");
+  }
+
+  function checkPw() {
+    const val = document.getElementById("pwInput").value;
+    if (val === PASSWORD) {
+      isAdmin = true;
+      closeModal();
+      document.getElementById("addSection").classList.add("visible");
+      document.getElementById("adminBadge").classList.add("visible");
+      document.querySelector(".btn-admin").innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lock Admin`;
+      render();
+    } else {
+      document.getElementById("pwError").style.display = "block";
+      document.getElementById("pwInput").value = "";
+      document.getElementById("pwInput").focus();
+    }
+  }
+
+  function lockAdmin() {
+    isAdmin = false;
+    document.getElementById("addSection").classList.remove("visible");
+    document.getElementById("adminBadge").classList.remove("visible");
+    document.querySelector(".btn-admin").innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Admin Panel`;
+    render();
+  }
+
+  // close modal on bg click
+  document.getElementById("modalBg").addEventListener("click", function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  render();
+</script>
+</body>
+</html>
